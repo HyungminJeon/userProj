@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="jquery-3.6.0.min.js"></script>
+<title>userInfo.html</title>
+<style>
+td, th {
+	padding: 10px;
+	border: 1px solid darkcyan;
+}
+
+tr td:nth-child(1) {
+	text-align: center;
+}
+
+table {
+	border: 1px solid darkcyan;
+	border-collapse: collapse;
+}
+
+#show {
+	padding-top: 15px;
+}
+</style>
+<script>
+        $(function(){
+
+            $.ajax({
+                url: 'getListServlet',
+                dataType:'json',
+                success:function(result){
+                    console.log(result);
+
+                    var $tbl = $('<table />');
+                    $tbl.append(getTitle());
+                    
+                    // 리스트 뿌리기
+                    for (let obj of result){
+                        let $tr = $('<tr />');
+                        
+                        let inputPhone = $('<input type="text" id="inputPhone" />').val(obj.user_phone);
+
+                        let fixBtn = $('<button />').html('수정');
+                        fixBtn.click(function() { // 수정 펑션
+                            
+                            let updatePhone = $(this).parent().prev().prev().children().eq(0).val();
+                            let updateId = $(this).parent().prev().prev().prev().prev().html();
+                            console.log(updatePhone, updateId);
+                            $.ajax({
+                                url:'updateServlet',
+                                type:'post',
+                                data:'updatePhone='+updatePhone+'&updateId='+updateId,
+                                success:function(result){
+                                    console.log('데이터 DB 업데이트 성공');
+                                },
+                                error:function(err){ console.log(err); }
+                            })
+
+                        });
+                    	$tr.append( // td 생성
+                            $('<td />').html(obj.user_id),
+                            $('<td />').html(obj.user_name),
+                            $('<td />').append(inputPhone),
+                            $('<td />').html(obj.user_gender),
+                            $('<td />').append(fixBtn)
+                        )
+                        $tbl.append($tr);
+
+                    }
+                    $('#show').append($tbl);
+
+
+                },
+                error:function(err){ console.log(err); }
+            });
+
+            $('#frm').submit(function(e){
+                
+                e.preventDefault(); // 못 넘어가게 막기
+
+                var id = $('#id').val();
+                var pass = $('#pass').val();
+                var name = $('#name').val();
+                var phone = $('#phone').val();
+                var gender = $("input[name='gender']:checked").val();                
+
+
+                let inputPhone = $('<input type="text" id="inputPhone" />').val(phone);
+                let fixBtn = $('<button />').html('수정');
+
+                fixBtn.click(function() { // 추가된 한 건도 수정 펑션
+                    
+                    let updatePhone = $(this).parent().prev().prev().children().eq(0).val();
+                    let updateId = $(this).parent().prev().prev().prev().prev().html();
+                    console.log(updatePhone, updateId);
+                    $.ajax({
+                        url:'updateServlet',
+                        type:'post',
+                        data:'updatePhone='+updatePhone+'&updateId='+updateId,
+                        success:function(result){
+                            console.log('데이터 DB 업데이트 성공');
+                        },
+                        error:function(err){ console.log(err); }
+                    })
+
+                });
+
+
+				// 한건 추가
+                $tr = $('<tr />').append(
+                    $('<td />').append(id),
+                    $('<td />').append(name),
+                    $('<td />').append(inputPhone),
+                    $('<td />').append(gender),
+                    $('<td />').append(fixBtn)
+                )
+                $('#show table').append($tr);
+
+                // 인서트
+                $.ajax({
+                    url:'insertServlet',
+                    type:'post',
+                    dataType:'json',
+                    data:'id='+id+'&name='+name+'&pass='+pass+'&phone='+phone+'&gender='+gender,
+                    success:function(result){
+                        console.log("DB 인서트 성공")
+                    },
+                    error:function(err){ console.log(err); }
+
+                });
+
+            });
+
+            // th 작성
+            function getTitle() {
+                let $title = $('<tr />');
+                $title.append(
+                    $('<th />').html('회원번호'),
+                    $('<th />').html('이름'),
+                    $('<th />').html('연락처'),
+                    $('<th />').html('성별'),
+                    $('<th />').html('기능')
+                    )
+                    return $title;
+            }
+        });
+        
+    </script>
+</head>
+<body>
+	<form id='frm'>
+		<table border="1">
+			<tr>
+				<td><label for="id">사용ID</label></td>
+				<td><input type="text" name="id" id="id"></td>
+			</tr>
+			<tr>
+				<td><label for="name">이름</label></td>
+				<td><input type="text" name="name" id="name"></td>
+			</tr>
+			<tr>
+				<td><label for="pass">비밀번호</label></td>
+				<td><input type="password" name="pass" id="pass"></td>
+			</tr>
+			<tr>
+				<td><label for="phone">연락처</label></td>
+				<td><input type="text" name="phone" id="phone"></td>
+			</tr>
+			<tr>
+				<td><label for="gender">성별</label></td>
+				<td>남성 <input type="radio" name="gender" value="남성"> 여성<input
+					type="radio" name="gender" value="여성">
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2"><input type="submit" value="전송"> <input
+					type="reset" value="리셋"></td>
+			</tr>
+		</table>
+	</form>
+	<div id="show"></div>
+</body>
+</html>

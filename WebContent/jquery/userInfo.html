@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="UTF-8">
+<title>userInfo.html</title>
+<style>
+</style>
+<script
+	src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script>
+        $(document).ready(function () {
+            //DB에 데이터를 화면에 출력.. <div><table></table></div>
+            //아작스를 쓰는 이유. 작업때마다 새로운 링크를 열지 않아도 되다.
+            $.ajax({
+                url: '../getUserListServlet',
+                dataType: 'json', //json 타입을 object타입으로 바꿔준다.
+                success: function (resolve) {
+                    showList(resolve);
+                },
+                
+                error: function (error) {
+                    window.alert(reject.statusText);
+                    console.error(`에러코드:${reject.status}, 에러메세지:${reject.statusText}`);
+
+                }
+            });
+
+
+           
+            //전송을 누르면..
+            $('#frm').submit(function (e) {
+            	
+                e.preventDefault();
+                let frm = document.getElementById('frm');
+                let data = new FormData(frm); // formdata: form 데이터 안에 있는 키 벨류 값들을 저장함
+                for (let k of data.entries()) { // object.entries() : [key, value] 쌍의 배열을 반환
+                    console.log(k);
+                }
+
+
+                //비동기 호출.. 파일업로드 서블릿
+                $.ajax({
+                	contentType: false,
+                    processData: false,
+                    url: '../userUpload',
+                    type: 'post',	
+                    dataType: 'json',
+                    data: data,
+                    success: function (result) {
+                    	createRow(result);
+                    },
+                    error: function (error) {
+                        console.log(error);
+                    }
+
+                });
+            })
+            
+            
+            //수정버튼 클릭이벤트.
+            $('#modifybtn').click(function(e) {
+                e.preventDefault();
+                let frm = document.getElementById('frm');  //자바스크립트형식으로 key값 가져옴
+            	let data = new FormData(frm);
+
+                $.ajax({
+                    contentType: false,
+                    processData: false,
+                    url: '../fileModifyServlet',
+                    data: data,
+                    dataType: 'json',
+                    type: 'post',
+                    success: function(result) {  
+						if(result.retCode == 'Success') {
+							window.alert('정상수정됨.');
+						} else {
+							window.alert("수정예외발생.");
+						}
+                    },
+                    error: function(err) {
+                        console.log(err);
+                    }
+                });
+            });
+            
+            
+            /* function deleteRow (e) {
+            	
+            	let num = $(this).parent().children().eq(0).html();
+            	let delTr = $(this).parent();
+            	console.log(delTr,'adfasdf',num);
+            	//db에서 삭제
+    			$.ajax({   	 		//서블릿 호출
+    				url: '../deleteServlet',
+    				data: 'num=' + num,    //넘겨주는 데이터
+    				success: function(){
+    					console.log("삭제후 처리..");
+    					//화면 삭제	
+    					delTr.remove();
+    				},
+    				error: function(err) {
+    					console.log(err);
+    				}
+    			}); 
+           	
+           } */
+            
+            function createRow(result) { //신규 입력된 데이터를 화면에 추가로 보여주기.
+                
+        	   console.log(result);
+                let $tr = $('<tr />');
+                
+                var $td_id = $('<td />').append(result.id);
+                var $td_name = $('<td />').append(result.name);
+    			var $td_tel = $('<td />').append(result.tel);
+    			var $td_gender = $('<td />').append(result.gender);
+    			var $td = $('<td />');
+    			 var $button = $('<button id = "modifybtn"/>').html('수정');
+                 //$button.click(deleteRow);
+    			//$btn.click(deleteRow);
+
+
+    			$td.append($button);
+    			
+    			$tr.append($td_id, $td_name, $td_tel, $td_gender,$td);
+    			$('#tbl').append($tr);
+    			
+    			
+    		}
+            
+            
+
+
+            function showList(resolve) {
+
+                console.log(resolve);
+
+                let $table = $('<table id="tbl"/>').attr('border', '1');
+
+                
+                // 헤더 생성
+
+                var $id = '회원번호';
+                var $num = '이름';
+                var $tel = '연락처';
+                var $gender = '성별';
+                var $function = '기능';
+
+
+                for (var i = 0; i < 1; i++) {
+                    var $tr = $('<tr />');
+                    
+                    var $th = $('<th />').append($id);
+                    $tr.append($th);
+                    var $th = $('<th />').append($num);
+                    $tr.append($th);
+                    var $th = $('<th />').append($tel);
+                    $tr.append($th);
+                    var $th = $('<th />').append($gender);
+                    $tr.append($th);
+                    var $th = $('<th />').append($function);
+                    $tr.append($th);
+                    $table.append($tr);
+                }
+                
+       
+                
+
+                // 내용 생성
+                for (var i = 0; i < resolve.length; i++) {
+
+                    let $tr = $('<tr />');
+                    
+                    $tr.click( function() {
+                    	console.log('tr클릭.')
+                    }); 
+                    
+                    //
+                    var $td = $('<td />').append(resolve[i].id);
+                    $tr.append($td);
+                    //
+                    var $td = $('<td />').append(resolve[i].name);
+                    $tr.append($td);
+                    //
+                    var $td = $('<td />').append(resolve[i].tel);
+                    $tr.append($td);
+                    //
+                    var $td = $('<td />').append(resolve[i].gender);
+                    $tr.append($td);
+                    
+                    var $button = $('<button id = "modifybtn"/>').html('수정');
+                    //$button.click(deleteRow);
+                    
+                    
+                    $tr.append($button);
+                    $table.append($tr);
+                }
+             
+                
+                $('#show').append($table);
+            }
+            
+            
+
+
+        });
+    </script>
+</head>
+
+<body>
+
+	<h6>등록화면</h6>
+	<form id='frm' action='../userUpload' method='post'
+		enctype='multipart/form-data'>
+		<table border="1">
+			<tr>
+				<td><label for="id">사용ID</label></td>
+				<td><input type="text" name="id" id="id"></td>
+			</tr>
+			<tr>
+				<td><label for="name">이름</label></td>
+				<td><input type="text" name="name" id="name"></td>
+
+			</tr>
+			<tr>
+				<td><label for="pwd">비밀번호</label></td>
+				<td><input type="password" name="pwd" id="pwd"></td>
+
+			</tr>
+			<tr>
+				<td><label for="tel">연락처</label></td>
+				<td><input type="text" name="tel" id="tel"></td>
+			</tr>
+			<tr>
+				<td><label for="gender">성별</label></td>
+				<td><input type="radio" value="남성" name="gender" checked>남성
+					<input type="radio" value="여성" name="gender">여성</td>
+			</tr>
+			<tr>
+				<td colspan="2"><input type="submit" value="등록"> <input
+					type="reset" value="취소"></td>
+			</tr>
+		</table>
+
+	</form>
+	<div id="show"></div>
+</body>
+
+</html>
